@@ -1,125 +1,97 @@
-/**
- * 解释器测试文件
- */
+import { interpret } from './interpreter';
+import { describe, test, expect, jest } from '@jest/globals';
 
-// 使用CommonJS语法
-const Interpreter = require('./interpreter.js').default;
+describe('Interpreter', () => {
+  test('should handle variable assignment', () => {
+    const code = 'var x = 10; var y = 20;';
+    const env = interpret(code);
+    expect(env.x).toBe(10);
+    expect(env.y).toBe(20);
+  });
 
-// 测试解释器功能
-function testInterpreter() {
-  console.log('开始测试解释器功能...');
-  
-  // 测试场景1：变量赋值和算术运算
-  function testVariablesAndArithmetic() {
-    console.log('\n测试1: 变量赋值和算术运算');
-    const interpreter = new Interpreter();
-    const script = `
-      var x = 10;
-      var y = 5;
-      var sum = x + y;
-      var difference = x - y;
-      var product = x * y;
-      var quotient = x / y;
-      print(sum);
-      print(difference);
-      print(product);
-      print(quotient);
-    `;
-    
-    const result = interpreter.execute(script);
-    console.log('输出:', result.output);
-    console.log('变量:', result.variables);
-  }
+  test('should handle arithmetic operations', () => {
+    const code = 'var a = 10 + 5; var b = 10 - 5; var c = 10 * 5; var d = 10 / 5;';
+    const env = interpret(code);
+    expect(env.a).toBe(15);
+    expect(env.b).toBe(5);
+    expect(env.c).toBe(50);
+    expect(env.d).toBe(2);
+  });
 
-  // 测试场景2：条件语句
-  function testConditionals() {
-    console.log('\n测试2: 条件语句');
-    const interpreter = new Interpreter();
-    const script = `
-      var a = 15;
-      var b = 10;
-      
-      if (a > b) {
-        print("a 大于 b");
-      } else {
-        print("a 小于等于 b");
-      }
-      
-      if (a == b) {
-        print("a 等于 b");
-      } else {
-        print("a 不等于 b");
-      }
-    `;
-    
-    const result = interpreter.execute(script);
-    console.log('输出:', result.output);
-  }
+  test('should handle string values', () => {
+    const code = 'var name = "Hello"; var message = "World";';
+    const env = interpret(code);
+    expect(env.name).toBe('Hello');
+    expect(env.message).toBe('World');
+  });
 
-  // 测试场景3：循环
-  function testLoops() {
-    console.log('\n测试3: 循环');
-    const interpreter = new Interpreter();
-    const script = `
-      var i = 0;
+  test('should handle comparison operations', () => {
+    const code = 'var a = 10 == 10; var b = 10 != 5; var c = 10 < 20; var d = 10 > 5;';
+    const env = interpret(code);
+    expect(env.a).toBe(true);
+    expect(env.b).toBe(true);
+    expect(env.c).toBe(true);
+    expect(env.d).toBe(true);
+  });
+
+  test('should handle if-else statements', () => {
+    const code = 'var x = 10; var result = 0; if (x > 5) { result = 1; } else { result = 2; }';
+    const env = interpret(code);
+    expect(env.result).toBe(1);
+
+    const code2 = 'var x = 3; var result = 0; if (x > 5) { result = 1; } else { result = 2; }';
+    const env2 = interpret(code2);
+    expect(env2.result).toBe(2);
+  });
+
+  test('should handle while loops', () => {
+    const code = 'var x = 0; var sum = 0; while (x < 5) { sum = sum + x; x = x + 1; }';
+    const env = interpret(code);
+    expect(env.x).toBe(5);
+    expect(env.sum).toBe(10); // 0+1+2+3+4=10
+  });
+
+  test('should handle parentheses in expressions', () => {
+    const code = 'var a = (10 + 5) * 2; var b = 10 + (5 * 2);';
+    const env = interpret(code);
+    expect(env.a).toBe(30);
+    expect(env.b).toBe(20);
+  });
+
+  test('should handle complex expressions', () => {
+    const code = 'var x = 10; var y = 20; var z = (x + y) * 2 - 5 / 1;';
+    const env = interpret(code);
+    expect(env.z).toBe(55); // (10+20)*2 -5 = 60-5=55
+  });
+
+  test('should handle print statements', () => {
+    // 捕获console.log输出
+    const consoleSpy = jest.spyOn(console, 'log');
+    const code = 'var x = 10; print(x); print("Hello");';
+    interpret(code);
+    expect(consoleSpy).toHaveBeenCalledTimes(2);
+    expect(consoleSpy).toHaveBeenNthCalledWith(1, 10);
+    expect(consoleSpy).toHaveBeenNthCalledWith(2, 'Hello');
+    consoleSpy.mockRestore();
+  });
+
+  test('should handle combined statements', () => {
+    const code = `
+      var count = 0;
       var sum = 0;
-      while (i < 5) {
-        print(i);
-        var sum = sum + i;
-        var i = i + 1;
+      while (count < 3) {
+        if (count % 2 == 0) {
+          sum = sum + count;
+        }
+        count = count + 1;
       }
-      print("总和: " + sum);
+      print(sum);
     `;
-    
-    const result = interpreter.execute(script);
-    console.log('输出:', result.output);
-  }
-
-  // 测试场景4：字符串处理
-  function testStrings() {
-    console.log('\n测试4: 字符串处理');
-    const interpreter = new Interpreter();
-    const script = `
-      var name = "解释器";
-      var greeting = "Hello " + name;
-      print(greeting);
-      print("测试字符串连接");
-    `;
-    
-    const result = interpreter.execute(script);
-    console.log('输出:', result.output);
-  }
-
-  // 测试场景5：复合表达式和括号
-  function testComplexExpressions() {
-    console.log('\n测试5: 复合表达式和括号');
-    const interpreter = new Interpreter();
-    const script = `
-      var result = (10 + 5) * 2 - 8 / 4;
-      print(result);
-      
-      var condition = (10 > 5) && (20 < 25);
-      if (condition) {
-        print("复杂条件为真");
-      }
-    `;
-    
-    const result = interpreter.execute(script);
-    console.log('输出:', result.output);
-  }
-
-  // 运行所有测试
-  testVariablesAndArithmetic();
-  testConditionals();
-  testLoops();
-  testStrings();
-  testComplexExpressions();
-  
-  console.log('\n解释器测试完成！');
-}
-
-// 如果直接运行此文件
-testInterpreter();
-
-// 导出测试函数
-module.exports = { testInterpreter };
+    const consoleSpy = jest.spyOn(console, 'log');
+    const env = interpret(code);
+    expect(env.count).toBe(3);
+    expect(env.sum).toBe(2); // 0+2=2
+    expect(consoleSpy).toHaveBeenCalledWith(2);
+    consoleSpy.mockRestore();
+  });
+});
